@@ -1,0 +1,45 @@
+version: 2
+
+jobs:
+  image:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - run:
+          name: install gcloud
+          command: |
+            apk add --no-cache bash curl curl-dev python
+            curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
+            ln -s /root/google-cloud-sdk/bin/gcloud /usr/bin/gcloud
+      - run:
+          name: authenticate with gcloud
+          command: |
+            echo ${GOOGLE_SERVICE_ASR} | base64 -d > /tmp/service-asr.json
+            gcloud auth activate-service-account --key-file=/tmp/service-asr.json
+      - checkout
+      - setup_remote_docker
+      - run: docker build --build-arg GOOGLE_SERVICE_ASR=${GOOGLE_SERVICE_ASR} -t ifttt .
+      - deploy:
+          name: push image (hash)
+          command: |
+            docker tag ifttt "gcr.io/my-gcloud-project/ifttt:${CIRCLE_SHA1:0:8}"
+            gcloud docker -- push "gcr.io/my-gcloud-project/ifttt:${CIRCLE_SHA1:0:8}"
+      - deploy:
+          name: push image (branch)
+          command: |
+            docker tag ifttt "gcr.io/my-gcloud-project/ifttt:${CIRCLE_BRANCH}"
+            gcloud docker -- push "gcr.io/my-gcloud-project/ifttt:${CIRCLE_BRANCH}"
+      - deploy:
+          name: push image (latest)
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag ifttt gcr.io/my-gcloud-project/ifttt:latest
+              gcloud docker -- push gcr.io/my-gcloud-project/ifttt:latest
+            fi
+
+workflows:
+  version: 2
+  run-jobs:
+    jobs:
+      - image:
+          context: org-global

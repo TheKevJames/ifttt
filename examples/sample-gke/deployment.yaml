@@ -1,0 +1,49 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: ifttt
+  name: ifttt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: iftttxa
+  template:
+    metadata:
+      labels:
+        app: ifttt
+    spec:
+      containers:
+      - image: gcr.io/my-gcloud-project/ifttt:latest
+        imagePullPolicy: IfNotPresent
+        name: ifttt
+        env:
+        # "false" or "true". Toggles debug logging.
+        - name: DEBUG
+          value: "true"
+
+        # Datastore cache kind prefixes (eg. "IFTTT-User" to cache the User kind)
+        # Defaults to "IFTTT"
+        - name: CACHE_KIND_PREFIX
+          value: IFTTT
+
+        - name: GCLOUD_PROJECT
+          value: my-gcloud-project
+
+        # Interval (in seconds) between polls. Defaults to 30s.
+        - name: POLL_INTERVAL
+          value: "30"
+
+        # Used in send-slack-notif action. See secrets.yaml for more info.
+        - name: SLACK_CHANNEL
+          valueFrom:
+            secretKeyRef:
+              name: slack
+              key: channel
+        - name: SLACK_WEBHOOK_URL
+          valueFrom:
+            secretKeyRef:
+              name: slack
+              key: webhook-url

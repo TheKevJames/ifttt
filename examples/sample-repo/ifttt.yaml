@@ -1,0 +1,38 @@
+- name: ping example.com whenever a user's "ping.enabled" field is toggled above zero
+  watch:
+    # when creating a datastore watch, you need to configure the Kind and the
+    # field to watch
+    source: datastore
+    kind: User
+    field: ping.count
+  # when IFTTT polls for updates, the previous and current values of the
+  # specified field are captured as `prev` and `curr`. The ID of the changed
+  # record is captured as `id`. The `if` field will run an arbitrary Python
+  # expression with these three arguments -- if it returns truthy, the `then`
+  # clause will get triggered.
+  # NOTE: datastore has a bit of a gotcha where records can have missing fields.
+  # Since these fields will be considered `None`, you may want to compare
+  # against `False` rather doing a simple falsiness check in some cases. Be
+  # aware!
+  if: not prev and curr > 0
+  # The `then` field runs an arbitrary set of commands *in order*. I find it
+  # very useful to use the built-in `send-slack-notif.sh` script as the final
+  # step -- you may or may not have any interest in doing the same.
+  # The `id` of the changed record and the `value` of the watched field will
+  # be interpolated into each of the commands.
+  then:
+    - ping-domain.sh -c {value}
+    # The send-slack-notif script requires you've set up a custom webhook
+    # integration on your Slack account and have `SLACK_WEBHOOK_URL` and
+    # `SLACK_CHANNEL` set in your environment. Last I checked, you could
+    # configure that here: https://slack.com/apps/A0F7XDUAZ-incoming-webhooks
+    - send-slack-notif -t "I just pinged a domain {value} times for user {id}!"
+
+- name: notify me when a book goes on sale
+  watch:
+    source: datastore
+    kind: Book
+    field: on_sale
+  if: prev is False and curr is True
+  then:
+    - send-slack-notif -t "Yo, {id} is on sale!"

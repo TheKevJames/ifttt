@@ -1,0 +1,42 @@
+version: 2
+
+jobs:
+  deploy:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - run:
+          name: install gcloud and kubectl
+          command: |
+            apk add --no-cache bash curl curl-dev python
+            curl -sSL https://sdk.cloud.google.com | bash -s -- --disable-prompts
+            ln -s /root/google-cloud-sdk/bin/gcloud /usr/bin/gcloud
+            gcloud components install kubectl
+            ln -s /root/google-cloud-sdk/bin/kubectl /usr/bin/kubectl
+      - run:
+          name: authenticate with gcloud
+          command: |
+            echo ${GOOGLE_SERVICE_ASR} | base64 -d > /tmp/service-asr.json
+            gcloud auth activate-service-account --key-file=/tmp/service-asr.json
+      - run:
+          name: authenticate with kubernetes
+          command: |
+            gcloud config set project my-gcloud-project
+            gcloud config set container/cluster my-gcloud-cluster
+            gcloud container clusters get-credentials my-gcloud-cluster
+      - deploy:
+          name: deploy latest image
+          command: |
+            kubectl set image deployment/ifttt ifttt="gcr.io/my-gcloud-project/ifttt:${CIRCLE_SHA1:0:8}"
+
+workflows:
+  version: 2
+  run-jobs:
+    jobs:
+      - deploy:
+          context: org-global
+          filters:
+            branches:
+              only: master
+          requires:
+            - image
