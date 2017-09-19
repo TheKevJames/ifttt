@@ -1,0 +1,6 @@
+.circleci/*
+.pre-commit-config.yaml
+k8s/*
+README.md
+requirements.test.txt
+tests/*

@@ -1,0 +1,4 @@
+-r requirements.txt
+
+codecov==2.0.9
+pytest-cov==2.5.1

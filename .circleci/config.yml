@@ -1,0 +1,59 @@
+version: 2
+
+jobs:
+  lint:
+    docker:
+      - image: python:3.6.2
+    steps:
+      - checkout
+      - run: pip install pre-commit
+      - run: pre-commit run --all-files
+
+  pytest:
+    docker:
+      - image: python:3.6.2
+    steps:
+      - checkout
+      - run: pip install -r requirements.test.txt
+      - run: python -m pytest --cov=ifttt
+      - run: codecov
+
+  image:
+    docker:
+      - image: docker:17.05.0-ce-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run: docker build -t ifttt -f Dockerfile .
+      - deploy:
+          name: login to dockerhub
+          command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
+      - deploy:
+          name: push image (hash)
+          command: |
+            docker tag ifttt "thekevjames/ifttt:${CIRCLE_BRANCH}-${CIRCLE_SHA1:0:8}"
+            docker push "thekevjames/ifttt:${CIRCLE_BRANCH}-${CIRCLE_SHA1:0:8}"
+      - deploy:
+          name: push image (branch)
+          command: |
+            docker tag ifttt "thekevjames/ifttt:${CIRCLE_BRANCH}"
+            gcloud docker -- push "thekevjames/ifttt:${CIRCLE_BRANCH}"
+      - deploy:
+          name: push image (latest)
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag ifttt thekevjames/ifttt:latest
+              gcloud docker -- push thekevjames/ifttt:latest
+            fi
+
+workflows:
+  version: 2
+  run-jobs:
+    jobs:
+      - lint
+      - pytest
+      - image:
+          context: org-global
+          requires:
+            - lint
+            - pytest

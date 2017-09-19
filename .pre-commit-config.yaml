@@ -1,0 +1,35 @@
+repos:
+-   repo: git://github.com/pre-commit/pre-commit-hooks
+    sha: v0.9.3
+    hooks:
+    -   id: check-ast
+    -   id: check-case-conflict
+    -   id: check-executables-have-shebangs
+    -   id: check-json
+    -   id: check-merge-conflict
+    -   id: check-symlinks
+    -   id: check-xml
+    -   id: check-yaml
+    -   id: debug-statements
+    -   id: detect-private-key
+    -   id: double-quote-string-fixer
+    -   id: end-of-file-fixer
+    -   id: file-contents-sorter
+        files: .dockerignore requirements.txt requirements.test.txt
+    -   id: name-tests-test
+    -   id: requirements-txt-fixer
+    -   id: trailing-whitespace
+-   repo: git://github.com/pre-commit/mirrors-pylint
+    sha: v1.7.2
+    hooks:
+    -   id: pylint
+        args:
+        - -d fixme
+        - -d import-error
+        - -d invalid-name
+        - -d locally-disabled
+        - -d missing-docstring
+-   repo: git://github.com/Lucas-C/pre-commit-hooks
+    sha: v1.1.4
+    hooks:
+    -   id: remove-tabs
