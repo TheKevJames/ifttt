@@ -15,7 +15,7 @@ RUN pip install --no-cache-dir -r /ifttt/requirements.txt
 COPY ifttt /ifttt
 COPY actions/* /usr/bin
 
-ONBUILD COPY actions/* /usr/bin
+ONBUILD COPY actions/* /usr/bin/
 ONBUILD RUN chmod a+x /usr/bin/*
 ONBUILD COPY ifttt.yaml /ifttt/watches/config.yaml
 
