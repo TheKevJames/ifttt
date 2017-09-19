@@ -19,8 +19,8 @@ done
 # sanity check
 # NOTE: you can use environment variables from your IFTTT image. No need to pass
 # constants explicitly!
-[[ -z "${DOMAIN}" ]] && { error "DOMAIN is unset" }
-[[ -z "${COUNT}" ]] && { error "COUNT is unset" }
+[[ -z "${DOMAIN}" ]] && { error "DOMAIN is unset"; }
+[[ -z "${COUNT}" ]] && { error "COUNT is unset"; }
 #
 
 # ACTION
