@@ -9,7 +9,6 @@ LOG_FORMAT = '%(levelname) %(name)s %(lineno) %(message)'
 
 
 class JsonFormatter(jsonlogger.JsonFormatter):
-    # pylint: disable=too-few-public-methods
     def __init__(self, fmt=LOG_FORMAT, *args, **kwargs):
         jsonlogger.JsonFormatter.__init__(self, fmt=fmt, *args, **kwargs)
 

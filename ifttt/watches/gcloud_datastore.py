@@ -15,12 +15,13 @@ logger = logging.getLogger(__name__)
 
 
 class DatastoreWatch(BaseWatch):
-    def __init__(self, name, if_fn, then_fns, kind, field):  # pylint: disable=too-many-arguments
+    def __init__(self, name, if_fn, then_fns, kind, field):
         self.name = name
         self.if_fn = if_fn
         self.then_fns = then_fns
 
         self.kind = kind
+        self.kind_cacheable = '{}-{}'.format(CACHE_KIND_PREFIX, self.kind)
         self.field = field
 
         self.client = datastore.Client(PROJECT)
@@ -45,10 +46,9 @@ class DatastoreWatch(BaseWatch):
                 yield eid, curr
 
     def refresh_cache(self):
-        cache_kind = '{}-{}'.format(CACHE_KIND_PREFIX, self.kind)
-        query = self.client.query(kind=cache_kind)
-
         self.cache = collections.defaultdict(dict)
+
+        query = self.client.query(kind=self.kind_cacheable)
         for result in query.fetch():
             self.cache[result.key.id_or_name] = result
 
@@ -68,7 +68,12 @@ class DatastoreWatch(BaseWatch):
 
             # update cache
             with self.client.transaction():
-                self.cache[eid] = self.client.get(self.cache[eid].key)
+                try:
+                    self.cache[eid] = self.client.get(self.cache[eid].key)
+                except AttributeError:
+                    key = self.client.key(self.kind_cacheable, eid)
+                    self.cache[eid] = datastore.Entity(key=key)
+
                 self.cache[eid][self.field] = value
                 self.client.put(self.cache[eid])
 
