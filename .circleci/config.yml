@@ -24,6 +24,10 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run:
+          name: pull image for cache
+          command: |
+            docker pull "thekevjames/ifttt:${CIRCLE_BRANCH}" || docker pull thekevjames/ifttt
       - run: docker build -t ifttt .
       - deploy:
           name: login to dockerhub
