@@ -67,8 +67,9 @@ class DatastoreWatch(BaseWatch):
             logger.info('found change for %s on id %s', self, eid)
 
             # update cache
-            # TODO: s/put/patch
-            self.cache[eid][self.field] = value
-            self.client.put(self.cache[eid])
+            with self.client.transaction():
+                self.cache[eid] = self.client.get(self.cache[eid].key)
+                self.cache[eid][self.field] = value
+                self.client.put(self.cache[eid])
 
             await self.run_actions(eid, value)
