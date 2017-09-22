@@ -25,41 +25,51 @@ class DatastoreWatch(BaseWatch):
 
         self.client = datastore.Client(PROJECT)
 
+        self.cache = collections.defaultdict(dict)
+
     def __repr__(self):
         return "DatastoreWatch '{}'".format(self.name)
 
     def __str__(self):
         return '[{}: {}->{}]'.format(self.__repr__(), self.kind, self.field)
 
-    async def poll(self):
-        cache_kind = '{}-{}'.format(CACHE_KIND_PREFIX, self.kind)
-        query = self.client.query(kind=cache_kind)
-
-        cache = collections.defaultdict(dict)
-        for result in query.fetch():
-            cache[result.key.id_or_name] = result
-
+    def collect_activations(self):
         query = self.client.query(kind=self.kind)
         for result in query.fetch():
             eid = result.key.id_or_name
-            prev = cache[eid].get(self.field)
+            prev = self.cache[eid].get(self.field)
             curr = result.get(self.field)
 
             # Only run actions when if_fn denotes an activation.
-            if not self.if_fn(eid, prev, curr):
-                continue
+            if self.if_fn(eid, prev, curr):
+                yield eid, curr
 
-            logger.info('found change for %s on id %s', self.__str__(), eid)
+    def refresh_cache(self):
+        cache_kind = '{}-{}'.format(CACHE_KIND_PREFIX, self.kind)
+        query = self.client.query(kind=cache_kind)
+
+        self.cache = collections.defaultdict(dict)
+        for result in query.fetch():
+            self.cache[result.key.id_or_name] = result
+
+    async def run_actions(self, eid, value):
+        try:
+            for then_fn in self.then_fns:
+                await self.run(then_fn.format(id=eid, value=value))
+        except ActionError as e:
+            logger.error('could not run actions for %s on id %s', self, eid)
+            logger.exception(e)
+
+    async def poll(self):
+        self.refresh_cache()
+
+        for (eid, value) in self.collect_activations():
+            logger.info('found change for %s on id %s', self, eid)
 
             # update cache
-            # TODO: s/put/patch
-            cache[eid][self.field] = curr
-            self.client.put(cache[eid])
+            with self.client.transaction():
+                self.cache[eid] = self.client.get(self.cache[eid].key)
+                self.cache[eid][self.field] = value
+                self.client.put(self.cache[eid])
 
-            try:
-                for then_fn in self.then_fns:
-                    await self.run(then_fn.format(id=eid, value=curr))
-            except ActionError as e:
-                logger.error('could not run actions for watch %s on id %s',
-                             self.__str__(), eid)
-                logger.exception(e)
+            await self.run_actions(eid, value)
