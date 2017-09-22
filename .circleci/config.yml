@@ -24,7 +24,16 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
-      - run: docker build -t ifttt .
+      - run:
+          name: pull image for cache
+          command: |
+            if docker pull "thekevjames/ifttt:${CIRCLE_BRANCH}"; then
+              docker tag "thekevjames/ifttt:${CIRCLE_BRANCH}" ifttt-cache
+            else
+              docker pull thekevjames/ifttt:latest
+              docker tag thekevjames/ifttt:latest ifttt-cache
+            fi
+      - run: docker build --cache-from ifttt-cache -t ifttt .
       - deploy:
           name: login to dockerhub
           command: docker login -u ${DOCKER_USER} -p ${DOCKER_PASS}
