@@ -1,6 +1,6 @@
 repository:
   name: ifttt
-  description: \"If This Then That\" for devs
+  description: If This Then That, for devs
   # homepage:
   private: false
 
