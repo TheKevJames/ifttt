@@ -75,7 +75,23 @@ implementing these as I need them / am interested in playing with something new
 If your `source` is set to "datastore", you need to additionally configure the
 `kind` and `field` keys. The former tells IFTTT which datastore kind to watch
 and the `field` tells IFTTT which field to check for changes. Every record in
-the kind will be checked.
+the kind will be checked. You can also use `aggregate: sum` to apply your watch
+as an aggregate over the sum of each record. The value of this key can be any
+arbitrary python code to be applied.
+
+For example, you could set:
+
+```yaml
+- name: notify on insane questions
+  watch:
+    source: datastore
+    kind: Question
+    field: question_importance
+    aggregate: max
+  if: value > 9000
+  then:
+    - send-slack-notif -t "The most important question ({value}) is over 9000!"
+```
 
 #### if
 The `if` field is an arbitrary block of python code which will be used to

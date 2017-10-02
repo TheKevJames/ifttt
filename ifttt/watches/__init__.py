@@ -5,6 +5,7 @@ import yaml
 
 from .error import ConfigurationError
 from .gcloud_datastore import DatastoreWatch
+from .gcloud_datastore_aggregation import AggregatedDatastoreWatch
 
 
 WATCH_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -27,7 +28,13 @@ class WatchFactory:
                 raise ConfigurationError('malformed datastore watch',
                                          watch_config) from e
 
-            return DatastoreWatch(name, if_fn, then_fns, kind, field)
+            try:
+                aggregate = watch_config['aggregate']
+                aggregate_fn = eval(aggregate)  # pylint: disable=eval-used
+                return AggregatedDatastoreWatch(name, if_fn, then_fns, kind,
+                                                field, aggregate_fn)
+            except KeyError:
+                return DatastoreWatch(name, if_fn, then_fns, kind, field)
 
         raise ConfigurationError('unsupported watch source', source)
 
