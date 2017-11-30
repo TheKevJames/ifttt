@@ -24,16 +24,16 @@ class BaseWatch:
     def refresh_cache(self):
         raise NotImplementedError
 
-    def update_cache(self, id_, value):
+    def update_cache(self, id_, context, value):
         raise NotImplementedError
 
     async def poll(self):
         self.refresh_cache()
 
-        for (id_, value) in self.collect_activations():
+        for (id_, context, value) in self.collect_activations():
             logger.info('found change for %s on id %s', self, id_)
-            self.update_cache(id_, value)
-            await self.run_actions(id_, value)
+            self.update_cache(id_, context, value)
+            await self.run_actions(id_, context, value)
 
     @staticmethod
     async def run(then_fn):
@@ -54,10 +54,11 @@ class BaseWatch:
             raise ActionError('got error code running action', code, then_fn,
                               stdout, stderr)
 
-    async def run_actions(self, id_, value):
+    async def run_actions(self, id_, context, value):
         try:
             for then_fn in self.then_fns:
-                await self.run(then_fn.format(id=id_, value=value))
+                then = then_fn.format(id=id_, context=context, value=value)
+                await self.run(then)
         except ActionError as e:
             logger.error('could not run actions for %s on id %s', self, id_)
             logger.exception(e)

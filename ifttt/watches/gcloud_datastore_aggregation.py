@@ -32,4 +32,5 @@ class AggregatedDatastoreWatch(DatastoreWatch):
         prev = self.cache[self.cache_key].get(self.field, 0)  # TODO: aggregates across nulls
         curr = self.aggregate_fn(collector)
         if self.if_fn(self.cache_key, prev, curr):
-            yield self.cache_key, curr
+            context = None  # TODO: context aggregation
+            yield self.cache_key, context, curr
