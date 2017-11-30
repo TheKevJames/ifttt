@@ -52,7 +52,7 @@ class DatastoreWatch(BaseWatch):
         with self.client.transaction():
             cache_key = id_
             if context:
-                cache_key += '-{}'.format(cache_key)
+                cache_key += '-{}'.format(context)
 
             try:
                 key = self.cache[cache_key].key
