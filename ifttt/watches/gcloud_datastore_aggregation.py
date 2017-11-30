@@ -33,6 +33,7 @@ class AggregatedDatastoreWatch(DatastoreWatch):
             context = None
             if self.context_field:
                 context = result.get(self.context_field)
+                context = context or None  # TODO: consider handling nulls vs ''
 
             collector[context].append(value)
 
