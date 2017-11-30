@@ -24,7 +24,7 @@ class BaseWatch:
     def refresh_cache(self):
         raise NotImplementedError
 
-    def update_cache(self, id_, value):
+    def update_cache(self, id_, context, value):
         raise NotImplementedError
 
     async def poll(self):
@@ -32,7 +32,7 @@ class BaseWatch:
 
         for (id_, context, value) in self.collect_activations():
             logger.info('found change for %s on id %s', self, id_)
-            self.update_cache(id_, value)
+            self.update_cache(id_, context, value)
             await self.run_actions(id_, context, value)
 
     @staticmethod

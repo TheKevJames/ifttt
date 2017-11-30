@@ -48,13 +48,18 @@ class DatastoreWatch(BaseWatch):
         for result in query.fetch():
             self.cache[result.key.id_or_name] = result
 
-    def update_cache(self, id_, value):
+    def update_cache(self, id_, context, value):
         with self.client.transaction():
-            try:
-                self.cache[id_] = self.client.get(self.cache[id_].key)
-            except AttributeError:
-                key = self.client.key(self.kind_cacheable, id_)
-                self.cache[id_] = datastore.Entity(key=key)
+            cache_key = id_
+            if context:
+                cache_key += '-{}'.format(cache_key)
 
-            self.cache[id_][self.field] = value
-            self.client.put(self.cache[id_])
+            try:
+                key = self.cache[cache_key].key
+                self.cache[cache_key] = self.client.get(key)
+            except AttributeError:
+                key = self.client.key(self.kind_cacheable, cache_key)
+                self.cache[cache_key] = datastore.Entity(key=key)
+
+            self.cache[cache_key][self.field] = value
+            self.client.put(self.cache[cache_key])

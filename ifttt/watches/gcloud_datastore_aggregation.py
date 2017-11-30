@@ -1,3 +1,4 @@
+import collections
 import os
 
 from .gcloud_datastore import DatastoreWatch
@@ -15,15 +16,13 @@ class AggregatedDatastoreWatch(DatastoreWatch):
         self.context_field = context_field
 
         self.cache_key = '{}-{}'.format(kind, field)
-        if self.context_field:
-            self.cache_key += '-{}'.format(self.context_field)
         self.kind_cacheable = '{}-{}'.format(CACHE_KIND_PREFIX, 'Aggregates')
 
     def __repr__(self):
         return "AggregatedDatastoreWatch '{}'".format(self.name)
 
     def collect_activations(self):
-        collector = list()
+        collector = collections.defaultdict(list)
 
         query = self.client.query(kind=self.kind)
         for result in query.fetch():
@@ -31,10 +30,18 @@ class AggregatedDatastoreWatch(DatastoreWatch):
             if not value:
                 continue  # TODO: aggregates across nulls
 
-            collector.append(value)
+            context = None
+            if self.context_field:
+                context = result.get(self.context_field)
 
-        prev = self.cache[self.cache_key].get(self.field, 0)  # TODO: aggregates across nulls
-        curr = self.aggregate_fn(collector)
-        if self.if_fn(self.cache_key, prev, curr):
-            context = None  # TODO: context aggregation
-            yield self.cache_key, context, curr
+            collector[context].append(value)
+
+        for context, collection in collector.items():
+            cache_key = self.cache_key
+            if context:
+                cache_key += '-{}'.format(context)
+
+            prev = self.cache[cache_key].get(self.field, 0)  # TODO: aggregates across nulls
+            curr = self.aggregate_fn(collection)
+            if self.if_fn(self.cache_key, prev, curr):
+                yield self.cache_key, context, curr
