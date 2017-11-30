@@ -93,6 +93,23 @@ For example, you could set:
     - send-slack-notif -t "The most important question ({value}) is over 9000!"
 ```
 
+An `aggregate` can also include some `context` which is used to sub-divide
+aggregations. For example, if you have a datastore Kind containing counts of
+items of varying colors, you may set:
+
+```yaml
+- name: count items by color
+  watch:
+    source: datastore
+    kind: Item
+    field: count
+    aggregate:
+      expression: sum
+      context: color
+  then:
+    - send-slack-notif -t "There are {{value}} items colored {{context}}"
+```
+
 #### if
 The `if` field is an arbitrary block of python code which will be used to
 determine whether your actions should be run. If the code block returns a truthy

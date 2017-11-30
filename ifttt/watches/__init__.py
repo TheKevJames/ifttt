@@ -30,9 +30,16 @@ class WatchFactory:
 
             try:
                 aggregate = watch_config['aggregate']
+                context_field = None
+                if isinstance(aggregate, dict):
+                    context_field = aggregate['context']
+                    aggregate = aggregate['expression']
+
                 aggregate_fn = eval(aggregate)  # pylint: disable=eval-used
+
                 return AggregatedDatastoreWatch(name, if_fn, then_fns, kind,
-                                                field, aggregate_fn)
+                                                field, aggregate_fn,
+                                                context_field)
             except KeyError:
                 return DatastoreWatch(name, if_fn, then_fns, kind, field)
 

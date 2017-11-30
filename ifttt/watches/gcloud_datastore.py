@@ -48,9 +48,7 @@ class DatastoreWatch(BaseWatch):
         for result in query.fetch():
             self.cache[result.key.id_or_name] = result
 
-    def update_cache(self, id_, context, value):
-        _ = context  # context only applies for aggregates
-
+    def update_cache(self, id_, value):
         with self.client.transaction():
             try:
                 self.cache[id_] = self.client.get(self.cache[id_].key)

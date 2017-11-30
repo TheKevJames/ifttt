@@ -7,12 +7,16 @@ CACHE_KIND_PREFIX = os.environ.get('CACHE_KIND_PREFIX', 'IFTTT')
 
 
 class AggregatedDatastoreWatch(DatastoreWatch):
-    def __init__(self, name, if_fn, then_fns, kind, field, aggregate_fn):
+    def __init__(self, name, if_fn, then_fns, kind, field, aggregate_fn,
+                 context_field):
         super().__init__(name, if_fn, then_fns, kind, field)
 
         self.aggregate_fn = aggregate_fn
+        self.context_field = context_field
 
         self.cache_key = '{}-{}'.format(kind, field)
+        if self.context_field:
+            self.cache_key += '-{}'.format(self.context_field)
         self.kind_cacheable = '{}-{}'.format(CACHE_KIND_PREFIX, 'Aggregates')
 
     def __repr__(self):
