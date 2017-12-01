@@ -49,7 +49,7 @@ class AggregatedDatastoreWatch(DatastoreWatch):
             # sense, since by nature we are examining the entire Kind rather
             # than just a single record with some ID. Using the cache_key here
             # encodes roughly the right amount of data to get the gist across.
-            id_ = cache_key
+            id_ = self.cache_key
 
             if self.if_fn(id_, prev, curr):
                 yield id_, context, curr
