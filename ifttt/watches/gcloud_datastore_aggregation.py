@@ -9,11 +9,13 @@ CACHE_KIND_PREFIX = os.environ.get('CACHE_KIND_PREFIX', 'IFTTT')
 
 class AggregatedDatastoreWatch(DatastoreWatch):
     def __init__(self, name, if_fn, then_fns, kind, field, aggregate_fn,
-                 context_field):
+                 context_field, context_only=None):
         super().__init__(name, if_fn, then_fns, kind, field)
 
         self.aggregate_fn = aggregate_fn
         self.context_field = context_field
+        self.context_only = {None if c == 'None' else c
+                             for c in context_only or list()}
 
         self.cache_key = '{}-{}'.format(kind, field)
         self.kind_cacheable = '{}-{}'.format(CACHE_KIND_PREFIX, 'Aggregates')
@@ -34,6 +36,10 @@ class AggregatedDatastoreWatch(DatastoreWatch):
             if self.context_field:
                 context = result.get(self.context_field)
                 context = context or None  # TODO: consider handling nulls vs ''
+
+                if self.context_only and context not in self.context_only:
+                    # disabled aggregation context
+                    continue
 
             collector[context].append(value)
 

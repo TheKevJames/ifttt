@@ -110,6 +110,19 @@ items of varying colors, you may set:
     - send-slack-notif -t "There are {{value}} items colored {{context}}"
 ```
 
+You can limit contextual aggregates to specified subgroups as follows:
+
+```yaml
+# ...
+aggregate:
+  expression: sum
+  context: color
+  only:
+    - green
+    - blue
+# ...
+```
+
 #### if
 The `if` field is an arbitrary block of python code which will be used to
 determine whether your actions should be run. If the code block returns a truthy
