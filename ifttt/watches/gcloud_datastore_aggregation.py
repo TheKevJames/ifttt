@@ -1,10 +1,13 @@
 import collections
+import logging
 import os
 
 from .gcloud_datastore import DatastoreWatch
 
 
 CACHE_KIND_PREFIX = os.environ.get('CACHE_KIND_PREFIX', 'IFTTT')
+
+logger = logging.getLogger(__name__)
 
 
 class AggregatedDatastoreWatch(DatastoreWatch):
@@ -38,7 +41,7 @@ class AggregatedDatastoreWatch(DatastoreWatch):
                 context = context or None  # TODO: consider handling nulls vs ''
 
                 if self.context_only and context not in self.context_only:
-                    # disabled aggregation context
+                    logger.debug('skipping ignored context %s', context)
                     continue
 
             collector[context].append(value)
