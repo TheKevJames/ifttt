@@ -1,0 +1,8 @@
+assignees:
+  - thekevjames
+
+branch_prefix: pyup/
+
+label_prs: task
+pr_prefix: "chore(dependencies):"
+update: all
