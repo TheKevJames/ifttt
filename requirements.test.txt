@@ -1,4 +1,4 @@
 -r requirements.txt
 
-codecov==2.0.14
+codecov==2.0.15
 pytest-cov==2.5.1
