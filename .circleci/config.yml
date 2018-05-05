@@ -3,7 +3,7 @@ version: 2
 jobs:
   lint:
     docker:
-      - image: python:3.6.2
+      - image: python:3.6.4
     steps:
       - checkout
       - run: pip install pre-commit
@@ -16,7 +16,6 @@ jobs:
       - checkout
       - run: pip install -r requirements.test.txt
       - run: python -m pytest --cov=ifttt
-      - run: codecov
 
   image:
     docker:

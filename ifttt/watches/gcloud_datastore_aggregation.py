@@ -15,7 +15,7 @@ class AggregatedDatastoreWatch(DatastoreWatch):
         self.aggregate_fn = aggregate_fn
         self.context_field = context_field
         self.context_only = {None if c == 'None' else c
-                             for c in context_only or list()}
+                             for c in context_only or []}
 
         self.cache_key = '{}-{}'.format(kind, field)
         self.kind_cacheable = '{}-{}'.format(CACHE_KIND_PREFIX, 'Aggregates')
